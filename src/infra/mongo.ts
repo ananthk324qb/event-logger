@@ -1,8 +1,19 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, Db } from "mongodb";
 
-const client = new MongoClient("mongodb://localhost:27017");
+let db: Db;
 
-export async function connectMongo() {
+export async function initMongo() {
+  const client = new MongoClient(process.env.MONGO_URL!);
+
   await client.connect();
-  return client.db("auditDB");
+
+  db = client.db("auditDB");
+
+  console.log("Mongo connected");
+}
+
+export function getMongo() {
+  if (!db) throw new Error("Mongo not initialized");
+
+  return db;
 }
