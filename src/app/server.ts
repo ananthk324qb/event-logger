@@ -1,44 +1,34 @@
 import Fastify from "fastify";
 import authPlugin from "./plugins/auth";
+import { initMongo } from "../infra/mongo";
 import orderRoutes from "../orders/order.routes";
-import { connectMongo } from "../infra/mongo";
+import authRoutes from "../auth/auth.route";
+import eventRoutes from "../events/events.route";
+import "dotenv/config";
+
+await initMongo();
 
 async function start() {
-  await connectMongo();
-
   const app = Fastify({ logger: true });
 
   await app.register(authPlugin);
 
-  app.post("/login", async () => {
-    const token = app.jwt.sign({
-      userId: "admin45",
-      role: "ADMIN",
+  app.setErrorHandler((error: { message?: string }, req, reply) => {
+    const status = (error as any).statusCode || 500;
+
+    req.log.error(error);
+
+    reply.status(status).send({
+      success: false,
+      message: error?.message || "Internal Server Error",
     });
-    return { token };
   });
 
+  await app.register(authRoutes);
   await app.register(orderRoutes);
+  await app.register(eventRoutes);
 
-  app.get(
-    "/audit/:entityType/:entityId",
-    { preHandler: [app.authenticate] },
-    async (req: any) => {
-      const db = await connectMongo();
-      const events = await db
-        .collection("events")
-        .find({
-          entityType: req.params.entityType,
-          entityId: req.params.entityId,
-        })
-        .sort({ createdAt: -1 })
-        .toArray();
-
-      return events;
-    },
-  );
-
-  await app.listen({ port: 3000, host: "0.0.0.0" });
+  await app.listen({ port: Number(process.env.PORT), host: "0.0.0.0" });
 }
 
 start();
