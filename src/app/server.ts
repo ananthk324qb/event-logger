@@ -1,12 +1,12 @@
+import "dotenv/config";
 import Fastify from "fastify";
 import authPlugin from "./plugins/auth";
 import { initMongo } from "../infra/mongo";
 import orderRoutes from "../orders/order.routes";
 import authRoutes from "../auth/auth.route";
 import eventRoutes from "../events/events.route";
-import "dotenv/config";
 
-await initMongo();
+initMongo();
 
 async function start() {
   const app = Fastify({ logger: true });
@@ -20,7 +20,7 @@ async function start() {
 
     reply.status(status).send({
       success: false,
-      message: error?.message || "Internal Server Error",
+      message: error?.message || "Server Error",
     });
   });
 
@@ -28,7 +28,10 @@ async function start() {
   await app.register(orderRoutes);
   await app.register(eventRoutes);
 
-  await app.listen({ port: Number(process.env.PORT), host: "0.0.0.0" });
+  const port = Number(process.env.PORT);
+
+  await app.listen({ port, host: "0.0.0.0" });
+  app.log.info(`Server running on http://localhost:${port}`);
 }
 
 start();

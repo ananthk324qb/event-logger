@@ -21,6 +21,12 @@ export async function createOrder(amount: number, user: any) {
   return id;
 }
 
+export async function fetchOrder(id: string) {
+  const order = await getOrder(id);
+
+  return order;
+}
+
 export async function shipOrder(id: string, user: any) {
   const order = await getOrder(id);
   if (!order) throw new Error("Order not found");
@@ -38,9 +44,8 @@ export async function shipOrder(id: string, user: any) {
 
 export async function cancelOrder(id: string, user: any) {
   const order = await getOrder(id);
+
   if (!order) throw new Error("Order not found");
-  if (order.status === "SHIPPED")
-    throw new Error("Cannot cancel shipped order");
 
   await updateOrderStatus(id, "CANCELLED");
 

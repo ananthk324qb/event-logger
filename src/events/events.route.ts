@@ -2,23 +2,21 @@ import { FastifyInstance } from "fastify";
 import { getMongo } from "../infra/mongo";
 
 const eventRoutes = (app: FastifyInstance) => {
-  app.get(
-    "/audit/:entityType/:entityId",
-    { preHandler: [app.authenticate] },
-    async (req: any) => {
-      const db = getMongo();
-      const events = await db
-        .collection("events")
-        .find({
-          entityType: req.params.entityType,
-          entityId: req.params.entityId,
-        })
-        .sort({ createdAt: -1 })
-        .toArray();
+  app.get("/events", { preHandler: [app.authenticate] }, async (req: any) => {
+    const { type, id } = req.query as any;
 
-      return events;
-    },
-  );
+    const db = getMongo();
+    const events = await db
+      .collection("events")
+      .find({
+        entityType: type,
+        entityId: id,
+      })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return events;
+  });
 };
 
 export default eventRoutes;

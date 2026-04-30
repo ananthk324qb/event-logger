@@ -1,4 +1,4 @@
-import { auditQueue } from "./audit.queue";
+import { auditQueue } from "./event.queue";
 import { v4 as uuid } from "uuid";
 import { AuditEvent } from "./event.types";
 
