@@ -1,5 +1,6 @@
 import fp from "fastify-plugin";
 import jwt from "@fastify/jwt";
+import { ErrorTemplate } from "../../common/error";
 
 export default fp(async function (app) {
   await app.register(jwt, {
@@ -11,7 +12,7 @@ export default fp(async function (app) {
       await req.jwtVerify();
     } catch {
       reply.code(401);
-      throw new Error("Unauthorized");
+      throw new ErrorTemplate("Unauthorized", 401);
     }
   });
 });

@@ -10,7 +10,7 @@ const orderRoutes = async (app: FastifyInstance) => {
   app.post("/order", { preHandler: [app.authenticate] }, async (req: any) => {
     const { amount } = req.body;
     const orderId = await createOrder(amount, req.user);
-    return { orderId };
+    return { orderId, success: true };
   });
 
   app.get(
@@ -19,7 +19,7 @@ const orderRoutes = async (app: FastifyInstance) => {
     async (req: any) => {
       const id = req.params.id;
       const orderDetails = await fetchOrder(id);
-      return orderDetails;
+      return { data: orderDetails, success: true };
     },
   );
 
@@ -28,7 +28,7 @@ const orderRoutes = async (app: FastifyInstance) => {
     { preHandler: [app.authenticate] },
     async (req: any) => {
       await shipOrder(req.params.id, req.user);
-      return { success: true };
+      return { message: "Order shipped", success: true };
     },
   );
 
@@ -37,7 +37,7 @@ const orderRoutes = async (app: FastifyInstance) => {
     { preHandler: [app.authenticate] },
     async (req: any) => {
       await cancelOrder(req.params.id, req.user);
-      return { success: true };
+      return { message: "Order cancelled", success: true };
     },
   );
 };
