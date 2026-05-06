@@ -8,7 +8,7 @@ export async function insertOrder(id: string, amount: number) {
   );
 }
 
-export async function updateOrderStatus(id: string, status: string) {
+export async function writeOrderStatus(id: string, status: string) {
   await pgPool.query(
     `UPDATE orders
      SET status=$1,

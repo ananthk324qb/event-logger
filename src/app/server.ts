@@ -4,7 +4,7 @@ import authPlugin from "./plugins/auth";
 import { initMongo } from "../infra/mongo";
 import orderRoutes from "../orders/order.routes";
 import authRoutes from "../auth/auth.route";
-import eventRoutes from "../events/events.route";
+import eventRoutes from "../events/events.routes";
 import { isHttpError } from "../common/error";
 
 initMongo();
@@ -18,10 +18,8 @@ async function start() {
     const status = isHttpError(error)
       ? error.statusCode
       : (error as { statusCode?: number }).statusCode || 500;
-    const errorMessage =
-      error instanceof Error ? error.message : "Bad Request";
-    const message =
-      status >= 500 ? "Internal Server Error" : errorMessage;
+    const errorMessage = error instanceof Error ? error.message : "Bad Request";
+    const message = status >= 500 ? "Internal Server Error" : errorMessage;
 
     req.log.error(error);
 

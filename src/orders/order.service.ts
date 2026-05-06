@@ -1,5 +1,5 @@
 import { ulid } from "ulid";
-import { insertOrder, updateOrderStatus, getOrder } from "./order.repository";
+import { insertOrder, getOrder, writeOrderStatus } from "./order.repository";
 import { logEvent } from "../event-engine/event.service";
 import { ErrorTemplate } from "../common/error";
 
@@ -11,7 +11,7 @@ export async function createOrder(amount: number, user: any) {
   await logEvent({
     entityType: "ORDER",
     entityId: orderId,
-    eventType: "OrderCreated",
+    eventType: "CREATED",
     actor: {
       userId: user.userId,
       role: user.role,
@@ -30,36 +30,38 @@ export async function fetchOrder(id: string) {
   return order;
 }
 
-export async function shipOrder(id: string, user: any) {
+export async function updateOrderStatus(id: string, user: any, status: string) {
   const order = await getOrder(id);
 
   if (!order) throw new ErrorTemplate("Order not found", 404);
 
-  await updateOrderStatus(id, "SHIPPED");
-
-  await logEvent({
-    entityType: "ORDER",
-    entityId: id,
-    eventType: "OrderShipped",
-    actor: user,
-  });
-}
-
-export async function cancelOrder(id: string, user: any) {
-  const order = await getOrder(id);
-
-  if (!order) throw new ErrorTemplate("Order not found", 404);
-
-  if (order.status === "CANCELLED") {
-    throw new ErrorTemplate("Order is already cancelled", 409);
+  switch (status) {
+    case "PACKED":
+      if (order.status !== "CREATED") {
+        throw new ErrorTemplate("Order must be created to be packed", 400);
+      }
+      await writeOrderStatus(id, "PACKED");
+      break;
+    case "SHIPPED":
+      if (order.status !== "PACKED") {
+        throw new ErrorTemplate("Order must be packed to be shipped", 400);
+      }
+      await writeOrderStatus(id, "SHIPPED");
+      break;
+    case "CANCELLED":
+      if (order.status === "CANCELLED") {
+        throw new ErrorTemplate("Order already cancelled", 400);
+      }
+      await writeOrderStatus(id, "CANCELLED");
+      break;
+    default:
+      throw new ErrorTemplate("Invalid status", 400);
   }
 
-  await updateOrderStatus(id, "CANCELLED");
-
   await logEvent({
     entityType: "ORDER",
     entityId: id,
-    eventType: "OrderCancelled",
+    eventType: status,
     actor: user,
   });
 }

@@ -1,10 +1,5 @@
 import { FastifyInstance } from "fastify";
-import {
-  createOrder,
-  shipOrder,
-  cancelOrder,
-  fetchOrder,
-} from "./order.service";
+import { createOrder, fetchOrder, updateOrderStatus } from "./order.service";
 
 const orderRoutes = async (app: FastifyInstance) => {
   app.post("/order", { preHandler: [app.authenticate] }, async (req: any) => {
@@ -24,20 +19,12 @@ const orderRoutes = async (app: FastifyInstance) => {
   );
 
   app.patch(
-    "/order/:id/ship",
+    "/order/:id/status",
     { preHandler: [app.authenticate] },
     async (req: any) => {
-      await shipOrder(req.params.id, req.user);
-      return { message: "Order shipped", success: true };
-    },
-  );
+      await updateOrderStatus(req.params.id, req.user, req.body.status);
 
-  app.patch(
-    "/order/:id/cancel",
-    { preHandler: [app.authenticate] },
-    async (req: any) => {
-      await cancelOrder(req.params.id, req.user);
-      return { message: "Order cancelled", success: true };
+      return { message: "Order status updated", success: true };
     },
   );
 };
